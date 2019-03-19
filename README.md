@@ -12,7 +12,7 @@ The first order conditions for fixed effects can be simplified to
 
 For certain distribution and link combinations this yields explicit solutions for the estimated coefficient for the fixed effects ![glm](resources/delta.png). Specifically, this is the case for the Gaussian distribution with identity and log link, and for the Poisson, Gamma and Inverse Gaussian distributions with log link. This makes it possible to compute the fixed effects separately from the estimation of the coefficients on variables of interest, dramatically increasing the speed of the estimation procedure.
 
-For more detail on the inner workings see the [technical note](resources/glmhdfe-technical-note.pdf). For details on the `Stata` implementation consult [Stata readme file](https://github.com/julianhinz/glmhdfe/Stata_glmhdfe).
+For more detail on the inner workings see the [technical note](resources/glmhdfe-technical-note.pdf). For details on the `Stata` implementation consult the [Stata readme file](https://github.com/julianhinz/glmhdfe/Stata_glmhdfe).
 
 # Implementation in R
 
@@ -44,7 +44,7 @@ There are numerous options to tweak the estimation procedure:
 * `family` specifies the estimator used, currently limited to `gaussian(link = "identity")`, `gaussian(link = "log")`, `poisson(link = "log")`, `Gamma(link = "log")`
 * `beta` allows to include a vector of starting values, although, interestingly, this does not tend to speed up the estimation
 * `tolerance` specifies the minimum change in the deviance at which the iteration breaks
-* `max_iter` specifies the maximum number of iterations
+* `max_iterations` specifies the maximum number of iterations
 * `accelerate` specifies whether to use an acceleration algorithm, still quite buggy
 * `accelerate_iterations` specifies the number of iterations before starting acceleration algorithm
 * `accelerate_aux_vector` specifies whether to include the *estimated* fixed effects vectors in IRLS, which, interestingly, increases convergence speed

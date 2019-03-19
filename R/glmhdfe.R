@@ -4,7 +4,7 @@
 #'
 #' @param formula Formula that describes lefthandside variable, righthandside variables of interest, sets of fixed effects and error clustering, e.g. `y ~ x | fe1 + fe2 | cluster1 + cluster2`
 #' @param data `data.table` or `data.frame` with data used in the regression
-#' @param family Estimator used, currently limited to gaussian(link = "identity"), gaussian(link = "log"), poisson(link = "log") and Gamma(link = "log")
+#' @param family Estimator used, currently limited to gaussian(link = "identity"), gaussian(link = "log"), poisson(link = "log"), Gamma(link = "log") and inverse.gaussian(link = "log")
 #' @param beta Initial beta vector, defaults to 0
 #' @param tolerance Iteration stops when tolerance is reached (numeric)
 #' @param max_iterations Iteration stops when maximum number of iteration is reached (integer)
