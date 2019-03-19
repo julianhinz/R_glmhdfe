@@ -1,0 +1,6 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+build/*
+tests/*
+resources/*
+
