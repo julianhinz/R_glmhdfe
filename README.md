@@ -1,6 +1,6 @@
 # glmhdfe – Package for R
 
-The `R` package `glmhdfe` allows for the estimation of generalized linear models with high dimensional fixed effects. The packages make use of a convenient property of *some* combinations of error term distributions and link functions, where the fixed effects have an explicit solution.
+The `R` package `glmhdfe` allows for the estimation of generalized linear models with high dimensional fixed effects. The package makes use of a convenient property of *some* combinations of error term distributions and link functions, where the fixed effects have — conditional on all other estimated parameters — an explicit solution.
 
 Consider the following equation that we want to estimate:
 
@@ -10,13 +10,13 @@ The first order conditions for fixed effects can be simplified to
 
 ![glm](resources/foc.png)
 
-For certain distribution and link combinations this yields explicit solutions for the estimated coefficient for the fixed effects ![glm](resources/delta.png). Specifically, this is the case for the Gaussian distribution with identity and log link, and for the Poisson, Gamma and Inverse Gaussian distributions with log link. This makes it possible to compute the fixed effects separately from the estimation of the coefficients on variables of interest, dramatically increasing the speed of the estimation procedure.
+For certain distribution and link combinations this yields explicit solutions for the estimated coefficient for the fixed effects ![glm](resources/delta.png), given estimates for beta and the other deltas. Specifically, this is the case for the Gaussian distribution with identity and log link, and for the Poisson, Gamma and Inverse Gaussian distributions with log link. This makes it possible to update the fixed effects separately from the estimation of the coefficients on variables of interest in every iteration of the IRLS procedure used to estimate beta, dramatically increasing the speed of the estimation procedure.
 
-For more detail on the inner workings see the [technical note](resources/glmhdfe-technical-note.pdf). For details on the `Stata` implementation consult the [Stata readme file](https://github.com/julianhinz/glmhdfe/Stata_glmhdfe).
+For more detail on the inner workings see the [technical note](resources/glmhdfe-technical-note.pdf). A `Stata` implementation is coming soon.<!--For details on the `Stata` implementation consult the [Stata readme file](https://github.com/julianhinz/glmhdfe/Stata_glmhdfe).-->
 
 # Implementation in R
 
-The R package `glmhdfe` implements this "trick" and utilizes the powers of the `data.table` package for a fast implementation. For smaller datasets or other error term distributions we recommend the `feglm` command in the Amrei Stammann's [`alpaca` package](https://github.com/amrei-stammann/alpaca) that also allows high-dimensional fixed effects in GLM estimations.
+The R package `glmhdfe` implements this "trick" and utilizes the powers of the `data.table` package for a fast implementation. For smaller datasets or other error term distributions we recommend the `feglm` command in Amrei Stammann's [`alpaca` package](https://github.com/amrei-stammann/alpaca) that also allows high-dimensional fixed effects in GLM estimations.
 
 ## Installation
 
@@ -48,7 +48,7 @@ There are numerous options to tweak the estimation procedure:
 * `accelerate` specifies whether to use an acceleration algorithm, still quite buggy
 * `accelerate_iterations` specifies the number of iterations before starting acceleration algorithm
 * `accelerate_aux_vector` specifies whether to include the *estimated* fixed effects vectors in IRLS, which, interestingly, increases convergence speed
-* `compute_vcov` asks whether to compute the variance-covariance matrix. It can also be computed ex-post when data from estimation provided
+* `compute_vcov` asks whether to compute the variance-covariance matrix. It can also be computed ex-post when data from estimation is provided
 * `demean_variables` if you don't want to compute the variance-covariance matrix right away, do you still want to demean variables to be used in estimation of variance-covariance matrix?
 * `demean_iterations` specifies the number of iterations for the demeaning
 * `demean_tolerance` specifies the minimum change in the diagonal of the Hessian at which the demeaning iteration breaks
@@ -56,7 +56,7 @@ There are numerous options to tweak the estimation procedure:
 * `include_data` asks whether the data used in the estimation should be returned, which may be useful if the variance-covariance matrix will be computed ex-post
 * `include_data_vcov` return data used in variance-covariance matrix estimation?
 * `skip_checks` specifies, whether certain data integrity checks should be skipped before starting the procedure. Current option to skip are the detection of separation issues (`"separation"`), multicollinearity (`"multicollinearity"`), or missing data (`"complete_cases"`)
-* `force_generic` doesn't do anything currently. In the (near) future this option asks, whether the usually much faster fixed effects separation in the estimation procedure should be prevented. This is sort of a convenience option in case one wants to estimate other, non-hardcoded family-link combinations. In most cases we would then recommend using the `feglm` command from the `alpaca` package instead.
+<!--* `force_generic` doesn't do anything currently. In the (near) future this option asks, whether the usually much faster fixed effects separation in the estimation procedure should be prevented. This is sort of a convenience option in case one wants to estimate other, non-hardcoded family-link combinations. In most cases we would then recommend using the `feglm` command from the `alpaca` package instead.-->
 * `trace` asks whether to show some information during the estimation
 * `verbose` asks whether to show a bit more information during estimation for the impatient
 
@@ -78,7 +78,7 @@ You need to specify the data (best in the form of a `glmhdfe_data` object), call
 * run first IRLS with transformed lhs, otherwise beta guess only works for gaussian
 * faster checks for multicollinearity
 * faster checks for separation issues
-* fallback option for generic family-link combinations
+<!--* fallback option for generic family-link combinations-->
 
 ## Bugs?
 
