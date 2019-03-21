@@ -12,14 +12,14 @@ glmhdfe(formula, data, family = gaussian(), beta = NULL,
   accelerate_aux_vector = T, compute_vcov = T, demean_variables = F,
   demean_iterations = 100, demean_tolerance = tolerance,
   include_fe = T, include_data = F, include_data_vcov = F,
-  skip_checks = NULL, force_generic = F, trace = F, verbose = F)
+  skip_checks = NULL, trace = F, verbose = F)
 }
 \arguments{
 \item{formula}{Formula that describes lefthandside variable, righthandside variables of interest, sets of fixed effects and error clustering, e.g. \code{y ~ x | fe1 + fe2 | cluster1 + cluster2}}
 
 \item{data}{\code{data.table} or \code{data.frame} with data used in the regression}
 
-\item{family}{Estimator used, currently limited to gaussian(link = "identity"), gaussian(link = "log"), poisson(link = "log") and Gamma(link = "log")}
+\item{family}{Estimator used, currently limited to gaussian(link = "identity"), gaussian(link = "log"), poisson(link = "log"), Gamma(link = "log") and inverse.gaussian(link = "log")}
 
 \item{beta}{Initial beta vector, defaults to 0}
 
@@ -50,8 +50,6 @@ glmhdfe(formula, data, family = gaussian(), beta = NULL,
 \item{include_data_vcov}{Return data used in variance-covariance matrix estimation?}
 
 \item{skip_checks}{Skip checks before starting procedure? Character vector can include "separation", "complete_cases", "multicollinearity".}
-
-\item{force_generic}{Circumvent (usually faster) fixed effects separation in estimation?}
 
 \item{trace}{Show some information during estimation}
 

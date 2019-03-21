@@ -1,6 +1,6 @@
 Package: glmhdfe
 Title: Estimate Generalized Linear Models with High-Dimensional Fixed Effects
-Version: 0.3.1
+Version: 0.4
 Authors@R: c(person("Julian", "Hinz", email = "mail@julianhinz.com", role = c("aut", "cre")),
               person("Joschka", "Wanner", email = "Joschka.Wanner@uni-bayreuth.de", role = c("aut")),
               person("Alexander", "Hudlet", email = "alexander.hudlet@gmail.com", role = c("aut")))

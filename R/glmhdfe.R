@@ -20,7 +20,6 @@
 #' @param include_data Return data used in estimation?
 #' @param include_data_vcov Return data used in variance-covariance matrix estimation?
 #' @param skip_checks Skip checks before starting procedure? Character vector can include "separation", "complete_cases", "multicollinearity".
-#' @param force_generic Circumvent (usually faster) fixed effects separation in estimation?
 #' @param trace Show some information during estimation
 #' @param verbose Show more information during estimation for the impatient
 #'
@@ -51,7 +50,6 @@ glmhdfe <- function(formula,
                     include_data = F,
                     include_data_vcov = F,
                     skip_checks = NULL,
-                    force_generic = F,
                     trace = F,
                     verbose = F){
 
@@ -243,7 +241,7 @@ glmhdfe <- function(formula,
   beta_list <- as.matrix(beta)
   h <- 1
 
-  if ((family_link %in% family_link_hc) & force_generic == F) {
+  if ((family_link %in% family_link_hc)) {
 
     # routine for hard-coded family-link combinations with nice fixed effects expression
     repeat {
