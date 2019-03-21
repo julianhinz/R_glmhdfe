@@ -12,7 +12,7 @@ The first order conditions for fixed effects can be simplified to
 
 For certain distribution and link combinations this yields explicit solutions for the estimated coefficient for the fixed effects ![glm](resources/delta.png), given estimates for beta and the other deltas. Specifically, this is the case for the Gaussian distribution with identity and log link, and for the Poisson, Gamma and Inverse Gaussian distributions with log link. This makes it possible to update the fixed effects separately from the estimation of the coefficients on variables of interest in every iteration of the IRLS procedure used to estimate beta, dramatically increasing the speed of the estimation procedure.
 
-For more detail on the inner workings see the [technical note](resources/glmhdfe-technical-note.pdf). A `Stata` implementation is coming soon.<!--For details on the `Stata` implementation consult the [Stata readme file](https://github.com/julianhinz/glmhdfe/Stata_glmhdfe).-->
+For more detail on the inner workings see the [technical note](resources/glmhdfe_technical_note.pdf). A `Stata` implementation is coming soon.<!--For details on the `Stata` implementation consult the [Stata readme file](https://github.com/julianhinz/glmhdfe/Stata_glmhdfe).-->
 
 # Implementation in R
 
