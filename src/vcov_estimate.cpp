@@ -1,7 +1,5 @@
 #include <RcppArmadillo.h>
-// include <omp.h> //[[Rcpp::plugins(openmp)]]
 //[[Rcpp::depends(RcppArmadillo)]]
-
 using namespace Rcpp;
 using namespace R;
 

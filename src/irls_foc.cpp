@@ -1,5 +1,4 @@
 #include <RcppArmadillo.h>
-#include <omp.h>
 //[[Rcpp::depends(RcppArmadillo)]]
 
 using namespace Rcpp;
