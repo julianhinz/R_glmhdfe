@@ -69,7 +69,7 @@ compute_vcov(data, call, info)
 You need to specify the data (best in the form of a `glmhdfe_data` object), call (for information on clustering and variable of interest), and info (for information on degrees of freedom, etc.).
 
 ## Roadmap
-
+* try `eval` on variables that are not part of data, e.g. for something like `y ~ log(x)`
 * tests using `testthat`
 * parallelization in `Rcpp` with `omp`
 * Inverse Gaussian with log link
