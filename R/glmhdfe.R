@@ -119,7 +119,6 @@ glmhdfe <- function(formula,
   if ("all" %in% skip_checks) skip_checks <- c("separation", "complete_cases", "multicollinearity")
 
   # set up data table with lhs, rhs variables, fixed effects and clusters
-  # TODO: try eval if rhs_var not found in data
   pretty_message(verbose, "set up model frame", task = T)
   if (!is.data.table(data)) data = as.data.table(data) # not by reference, i.e. setDT, to keep original data untouched
   if (length(colnames(data)[all_vars %in% colnames(data)]) < length(all_vars)) {
