@@ -121,7 +121,7 @@ glmhdfe <- function(formula,
   # set up data table with lhs, rhs variables, fixed effects and clusters
   # TODO: try eval if rhs_var not found in data
   pretty_message(verbose, "set up model frame", task = T)
-  setDT(data)
+  if (!is.data.table(data)) data = as.data.table(data) # not by reference, i.e. setDT, to keep original data untouched
   if (length(colnames(data)[all_vars %in% colnames(data)]) < length(all_vars)) {
     cat("\n")
     stop(call. = F, str_c("Variables ", str_c(all_vars[!all_vars %in% colnames(data)], collapse = ", "), " not in data"))
