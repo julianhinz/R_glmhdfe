@@ -129,7 +129,8 @@ glmhdfe <- function(formula,
   if (!is.null(rhs_var)) model_frame_cols <- append(model_frame_cols, rhs_var)
   if (!is.null(rhs_fe)) model_frame_cols <- append(model_frame_cols, rhs_fe)
   if (!is.null(rhs_cluster_se)) model_frame_cols <- append(model_frame_cols, rhs_cluster_se)
-  data <- data[, unique(model_frame_cols), with = F]
+  data <- data[, lapply(model_frame_cols, function(x) eval(parse_text(x)))] # allows transformations of the data in the formula
+  setnames(data, model_frame_cols)
   if (length(rhs_var[rhs_var == "(Intercept)"]) == 1) data[, "(Intercept)" := 1]
   setnames(data, lhs_var, "lhs") # big speed increase because not calling get(lhs_var)
   pretty_message(verbose, checkmark = T)
@@ -165,9 +166,9 @@ glmhdfe <- function(formula,
   if (!is.null(rhs_var) && !"multicollinearity" %in% skip_checks) {
     pretty_message(verbose, "remove multicollinear variables", task = T)
     if (!is.null(rhs_fe)) {
-      help_formula <- as.Formula(str_c("lhs ~ ", str_c(rhs_var, collapse = " + "), " | ", str_c(rhs_fe, collapse = " + ")))
+      help_formula <- as.Formula(str_c("lhs ~ ", str_c("`", rhs_var, "`", collapse = " + "), " | ", str_c(rhs_fe, collapse = " + ")))
     } else {
-      help_formula <- as.Formula(str_c("lhs ~ 0 + ", str_c(rhs_var, collapse = " + ")))
+      help_formula <- as.Formula(str_c("lhs ~ 0 + ", str_c("`", rhs_var, "`", collapse = " + ")))
     }
     suppressWarnings(help_reg <- felm(help_formula, data))
     if ((verbose | trace) &&
