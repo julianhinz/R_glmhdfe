@@ -69,15 +69,13 @@ compute_vcov(data, call, info)
 You need to specify the data (best in the form of a `glmhdfe_data` object), call (for information on clustering and variable of interest), and info (for information on degrees of freedom, etc.).
 
 ## Roadmap
-* tests using `testthat`
-* parallelization in `Rcpp` with `omp`
-* Inverse Gaussian with log link
-* allow transformations in formula
-* detect collinearity with `lmhdfe` or other `data.table` routine, not `felm` because this slows it down
-* run first IRLS with transformed lhs, otherwise beta guess only works for gaussian
-* faster checks for multicollinearity
-* faster checks for separation issues
 - [x] try `eval` on variables that are not part of data, e.g. for something like `y ~ log(x)`
+- [ ] Inverse Gaussian with log link
+- [ ] tests using `testthat`
+- [ ] parallelization in `Rcpp` with `omp`
+- [ ] detect collinearity with `lmhdfe` or other `data.table` routine, not `felm` because this slows it down
+- [ ] run first IRLS with transformed lhs, otherwise beta guess only works for gaussian
+- [ ] faster checks for separation issues, implement procedure recommended by Correia et al. (2019)
 <!--* fallback option for generic family-link combinations-->
 
 ## Bugs?
