@@ -94,6 +94,9 @@ compute_vcov <- function (data, call, info,
   }
   if (!is.null(custom_cluster)) attr(vcov_object[["vcov_clustered"]], "clustering") <- custom_cluster
 
+  # Correct negative variances à la Cameron, Gelbach and Miller (2011)
+  vcov_object <- map(vcov_object, ~negative_vcov_correction(.x))
+
   pretty_message(verbose, checkmark = T)
 
   if (include_data_vcov) {
@@ -110,4 +113,17 @@ compute_vcov <- function (data, call, info,
   }
 
   return(structure(vcov_object, class = "glmhdfe_vcov"))
+}
+
+
+#' Correct negative variances à la Cameron, Gelbach and Miller (2011)
+#'
+#' @param x vcov matrix
+negative_vcov_correction <- function(x) {
+  x_e <- eigen(x)
+  if (length(x[x < 0]) > 0) {
+    x_e$values[x_e$values < 0] <- 0
+    x <- x_e$vectors %*% diag(x_e$values) %*% solve(x_e$vectors)
+  }
+  return(x)
 }
