@@ -52,7 +52,8 @@ print.summary.glmhdfe <- function(x, ..., digits = 4) {
   cat("\n")
   cat("Model fit:\n")
   printCoefmat(x[["coefficients"]], P.values = TRUE, has.Pvalue = TRUE, digits = digits)
-  cat("\nn = ", x[["nobs"]],", deviance = ", round(x[["deviance"]], digits = digits), "\n", sep = "")
+  if (!is.null(x[["clustering"]])) cat("Note: Standard errors clustered on ", str_c(x[["clustering"]], collapse = " + "), ".", sep = "")
+  cat("\n\nn = ", x[["nobs"]],", deviance = ", round(x[["deviance"]], digits = digits), "\n", sep = "")
 }
 
 #' Summarizing models of class \code{glmhdfe}
@@ -80,11 +81,13 @@ summary.glmhdfe = function(object, se_type = "hessian", ...) {
   rownames(coefficients) <- names(beta)
   colnames(coefficients) <- c("Estimate", "Std. error", "z value", "Pr(>|z|)")
 
-  structure(list(coefficients = coefficients,
+  output <- list(coefficients = coefficients,
                  deviance = object[["deviance"]],
                  nobs = object[["info"]][["nobs_data"]],
                  formula = object[["call"]][["formula"]],
                  family = object[["call"]][["family"]],
-                 link = object[["call"]][["link"]]),
-            class = "summary.glmhdfe")
+                 link = object[["call"]][["link"]])
+  if(se_type == "clustered") output[["clustering"]] = object[["call"]][["rhs_cluster_se"]]
+
+  structure(output, class = "summary.glmhdfe")
 }
