@@ -61,6 +61,7 @@ pretty_message <- function(verbose = F, description = NULL, time = F, task = F, 
 #' @param change Vector of relative change in variable of interest
 #' @param time Vector of time, relative or absolute
 #' @param tolerance Tolerance for which convergence is assumed to be achieved
+#' @importFrom utils tail
 predict_convergence_time <- function(time, change, tolerance) {
   y <- log(tail(change,3))
   time <- tail(time,3)
