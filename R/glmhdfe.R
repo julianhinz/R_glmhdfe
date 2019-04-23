@@ -239,6 +239,7 @@ glmhdfe <- function(formula,
   change_fe <- 1
   accelerate_i <- 0
   beta_list <- as.matrix(beta)
+  change_list <- as.matrix(t(c(Sys.time(),0)))
   h <- 1
 
   if ((family_link %in% family_link_hc)) {
@@ -322,7 +323,17 @@ glmhdfe <- function(formula,
 
       # continue?
       change <- (dev_old - dev) / dev
-      pretty_message(verbose, str_c("current deviance: ", round(dev, digits = 2), ", change: ", formatC(change, format = "e", digits = 2)), task = T, linebreak = T)
+      change_list <- rbind(change_list, as.matrix(t(c(Sys.time(), change))))
+      if (h < 3) {
+        pretty_message(verbose, str_c("current deviance: ", round(dev, digits = 2),
+                                      ", change: ", formatC(change, format = "e", digits = 2)),
+                       task = T, linebreak = T)
+      } else {
+        pretty_message(verbose, str_c("current deviance: ", round(dev, digits = 2),
+                                      ", change: ", formatC(change, format = "e", digits = 2),
+                                      ", ETA of convergence: ", as.POSIXct(predict_convergence_time(change_list[,1],change_list[,2], tolerance), origin="1970-01-01")),
+                       task = T, linebreak = T)
+      }
 
       if (h == max_iterations) break
       if (abs(change) <= tolerance) break
@@ -413,6 +424,7 @@ glmhdfe <- function(formula,
   if (!is.null(rhs_var)) object[["sse"]] <- beta[["sse"]] # sum of squared errors
   if (!is.null(rhs_var)) object[["deviance"]] <- beta[["dev"]] # deviance
   if (verbose == T) object[["beta_list"]] <- beta_list
+  if (verbose == T) object[["change_list"]] <- change_list
 
   return(structure(object, class = "glmhdfe"))
 }

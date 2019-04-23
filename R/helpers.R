@@ -55,3 +55,19 @@ pretty_message <- function(verbose = F, description = NULL, time = F, task = F, 
     if (linebreak) message("\n", appendLF = F)
   }
 }
+
+#' Predict convergence time
+#'
+#' @param change Vector of relative change in variable of interest
+#' @param time Vector of time, relative or absolute
+#' @param tolerance Tolerance for which convergence is assumed to be achieved
+predict_convergence_time <- function(time, change, tolerance) {
+  y <- log(tail(change,3))
+  time <- tail(time,3)
+  start <- time[1]
+  time <- (time - min(time))
+  X <- matrix(c(rep(1,3), time), ncol = 2)
+  b <- solve(t(X) %*% X) %*% t(X) %*% y
+  x <- start + (log(tolerance) - b[1]) / b[2]
+  return(x)
+}
