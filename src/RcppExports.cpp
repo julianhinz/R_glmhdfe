@@ -136,6 +136,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ols
+Rcpp::List ols(arma::mat X, arma::vec y, bool full);
+RcppExport SEXP _glmhdfe_ols(SEXP XSEXP, SEXP ySEXP, SEXP fullSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    rcpp_result_gen = Rcpp::wrap(ols(X, y, full));
+    return rcpp_result_gen;
+END_RCPP
+}
+// wls
+Rcpp::List wls(arma::mat X, arma::vec y, arma::vec w, bool full);
+RcppExport SEXP _glmhdfe_wls(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP, SEXP fullSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type w(wSEXP);
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    rcpp_result_gen = Rcpp::wrap(wls(X, y, w, full));
+    return rcpp_result_gen;
+END_RCPP
+}
 // wdemean
 arma::vec wdemean(arma::vec var, arma::vec weight);
 RcppExport SEXP _glmhdfe_wdemean(SEXP varSEXP, SEXP weightSEXP) {
@@ -231,6 +258,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_glmhdfe_fe_gamma_log_foc", (DL_FUNC) &_glmhdfe_fe_gamma_log_foc, 2},
     {"_glmhdfe_irls_inverse_gaussian_log", (DL_FUNC) &_glmhdfe_irls_inverse_gaussian_log, 4},
     {"_glmhdfe_fe_inverse_gaussian_log_foc", (DL_FUNC) &_glmhdfe_fe_inverse_gaussian_log_foc, 2},
+    {"_glmhdfe_ols", (DL_FUNC) &_glmhdfe_ols, 3},
+    {"_glmhdfe_wls", (DL_FUNC) &_glmhdfe_wls, 4},
     {"_glmhdfe_wdemean", (DL_FUNC) &_glmhdfe_wdemean, 2},
     {"_glmhdfe_demean", (DL_FUNC) &_glmhdfe_demean, 1},
     {"_glmhdfe_wdemean_list", (DL_FUNC) &_glmhdfe_wdemean_list, 2},

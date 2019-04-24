@@ -271,3 +271,106 @@ double fe_inverse_gaussian_log_foc(arma::vec lhs, arma::vec theta)
 {
   return log(sum(lhs % pow(exp(theta),-2)) / sum(pow(exp(theta),-1)));
 }
+
+
+/////
+// ordinary least squares
+/////
+
+// [[Rcpp::export]]
+Rcpp::List ols(arma::mat X, arma::vec y, bool full)
+{
+  int nobs = X.n_rows;
+  int nvars = X.n_cols;
+  arma::vec e(nobs);
+  arma::vec mse;
+  arma::mat hessian;
+  arma::vec score;
+  arma::vec beta;
+  Rcpp::List output;
+
+  // hessian
+  hessian = X.t()*X;
+
+  // score
+  score = X.t()*y;
+
+  // beta
+  beta = arma::solve(hessian, score);
+
+  if (!full) {
+    output = output.create(
+      Rcpp::Named("beta") = beta
+    );
+  }
+
+  if (full) {
+    // residuals and mse
+    e = (y - X*beta);
+    mse = e.t()*e / nobs;
+
+    output = output.create(
+      Rcpp::Named("beta") = beta.t(),
+      Rcpp::Named("mu") = X*beta,
+      Rcpp::Named("residuals") = e,
+      Rcpp::Named("hessian") = hessian,
+      Rcpp::Named("score") = score,
+      Rcpp::Named("nobs") = nobs,
+      Rcpp::Named("nvars") = nvars,
+      Rcpp::Named("mse") = mse
+    );
+  }
+
+  return output;
+}
+
+/////
+// weighted least squares
+/////
+
+// [[Rcpp::export]]
+Rcpp::List wls(arma::mat X, arma::vec y, arma::vec w, bool full)
+{
+  int nobs = X.n_rows;
+  int nvars = X.n_cols;
+  arma::vec e(nobs);
+  arma::vec mse;
+  arma::mat hessian;
+  arma::vec score;
+  arma::vec beta;
+  Rcpp::List output;
+
+  // hessian
+  hessian = X.t()*(w % X.each_col());
+
+  // score
+  score = X.t()*(w % y);
+
+  // beta
+  beta = arma::solve(hessian, score);
+
+  if (!full) {
+    output = output.create(
+      Rcpp::Named("beta") = beta
+    );
+  }
+
+  if (full) {
+    // residuals and mse
+    e = (y - X*beta);
+    mse = e.t()*e / nobs;
+
+    output = output.create(
+      Rcpp::Named("beta") = beta.t(),
+      Rcpp::Named("mu") = X*beta,
+      Rcpp::Named("residuals") = e,
+      Rcpp::Named("hessian") = hessian,
+      Rcpp::Named("score") = score,
+      Rcpp::Named("nobs") = nobs,
+      Rcpp::Named("nvars") = nvars,
+      Rcpp::Named("mse") = mse
+    );
+  }
+
+  return output;
+}

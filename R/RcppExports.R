@@ -41,8 +41,12 @@ fe_inverse_gaussian_log_foc <- function(lhs, theta) {
     .Call(`_glmhdfe_fe_inverse_gaussian_log_foc`, lhs, theta)
 }
 
-demean <- function(var, weight) {
-    .Call(`_glmhdfe_demean`, var, weight)
+ols <- function(X, y, full) {
+    .Call(`_glmhdfe_ols`, X, y, full)
+}
+
+wls <- function(X, y, w, full) {
+    .Call(`_glmhdfe_wls`, X, y, w, full)
 }
 
 wdemean <- function(var, weight) {
