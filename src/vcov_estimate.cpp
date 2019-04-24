@@ -7,14 +7,20 @@ using namespace R;
 // weighted demeaning
 /////
 // [[Rcpp::export]]
-arma::vec demean(arma::vec var, arma::vec weight)
+arma::vec wdemean(arma::vec var, arma::vec weight)
 {
   return (var - sum(weight % var) / sum(weight));
 }
 
 // [[Rcpp::export]]
-Rcpp::List demean_list(Rcpp::List var,
-                       Rcpp::NumericVector weight)
+arma::vec demean(arma::vec var)
+{
+  return (var - sum(var) / var.n_elem);
+}
+
+// [[Rcpp::export]]
+Rcpp::List wdemean_list(Rcpp::List var,
+                        Rcpp::NumericVector weight)
 {
   int n = var.size();
   NumericVector v;
@@ -22,6 +28,19 @@ Rcpp::List demean_list(Rcpp::List var,
   {
     v = var[i];
     var[i] = v - sum(weight * v) / sum(weight);
+  }
+  return var;
+}
+
+// [[Rcpp::export]]
+Rcpp::List demean_list(Rcpp::List var)
+{
+  int n = var.size();
+  NumericVector v;
+  for (int i = 0; i < n; i++)
+  {
+    v = var[i];
+    var[i] = v - mean(v);
   }
   return var;
 }

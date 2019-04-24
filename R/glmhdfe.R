@@ -356,13 +356,18 @@ glmhdfe <- function(formula,
       if (call_object[["link"]] == "log") data[, score := score / mu]
 
       # weights
-      if (call_object[["family_link"]] %in% c("gaussian_identity", "Gamma_log")) data[, w := 1]
-      if (call_object[["family_link"]] == "gaussian_log") data[, w := mu^2]
-      if (call_object[["family_link"]] == "poisson_log") data[, w := mu]
+      if (call_object[["family_link"]] == "gaussian_log") {
+        data[, w := mu^2]
+        w = "w"
+      }
+      if (call_object[["family_link"]] == "poisson_log") {
+        data[, w := mu]
+        w = "w"
+      }
 
       data <- cbind(data, demean_variable(variable = c("lhs", rhs_var, "score"),
                                           fixed_effects = rhs_fe,
-                                          weights = "w",
+                                          weights = w,
                                           data = data,
                                           demean_iterations = demean_iterations,
                                           demean_tolerance = demean_tolerance,

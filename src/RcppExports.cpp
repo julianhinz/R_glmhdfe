@@ -136,27 +136,49 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// demean
-arma::vec demean(arma::vec var, arma::vec weight);
-RcppExport SEXP _glmhdfe_demean(SEXP varSEXP, SEXP weightSEXP) {
+// wdemean
+arma::vec wdemean(arma::vec var, arma::vec weight);
+RcppExport SEXP _glmhdfe_wdemean(SEXP varSEXP, SEXP weightSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type var(varSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type weight(weightSEXP);
-    rcpp_result_gen = Rcpp::wrap(demean(var, weight));
+    rcpp_result_gen = Rcpp::wrap(wdemean(var, weight));
     return rcpp_result_gen;
 END_RCPP
 }
-// demean_list
-Rcpp::List demean_list(Rcpp::List var, Rcpp::NumericVector weight);
-RcppExport SEXP _glmhdfe_demean_list(SEXP varSEXP, SEXP weightSEXP) {
+// demean
+arma::vec demean(arma::vec var);
+RcppExport SEXP _glmhdfe_demean(SEXP varSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type var(varSEXP);
+    rcpp_result_gen = Rcpp::wrap(demean(var));
+    return rcpp_result_gen;
+END_RCPP
+}
+// wdemean_list
+Rcpp::List wdemean_list(Rcpp::List var, Rcpp::NumericVector weight);
+RcppExport SEXP _glmhdfe_wdemean_list(SEXP varSEXP, SEXP weightSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type var(varSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type weight(weightSEXP);
-    rcpp_result_gen = Rcpp::wrap(demean_list(var, weight));
+    rcpp_result_gen = Rcpp::wrap(wdemean_list(var, weight));
+    return rcpp_result_gen;
+END_RCPP
+}
+// demean_list
+Rcpp::List demean_list(Rcpp::List var);
+RcppExport SEXP _glmhdfe_demean_list(SEXP varSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type var(varSEXP);
+    rcpp_result_gen = Rcpp::wrap(demean_list(var));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -209,8 +231,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_glmhdfe_fe_gamma_log_foc", (DL_FUNC) &_glmhdfe_fe_gamma_log_foc, 2},
     {"_glmhdfe_irls_inverse_gaussian_log", (DL_FUNC) &_glmhdfe_irls_inverse_gaussian_log, 4},
     {"_glmhdfe_fe_inverse_gaussian_log_foc", (DL_FUNC) &_glmhdfe_fe_inverse_gaussian_log_foc, 2},
-    {"_glmhdfe_demean", (DL_FUNC) &_glmhdfe_demean, 2},
-    {"_glmhdfe_demean_list", (DL_FUNC) &_glmhdfe_demean_list, 2},
+    {"_glmhdfe_wdemean", (DL_FUNC) &_glmhdfe_wdemean, 2},
+    {"_glmhdfe_demean", (DL_FUNC) &_glmhdfe_demean, 1},
+    {"_glmhdfe_wdemean_list", (DL_FUNC) &_glmhdfe_wdemean_list, 2},
+    {"_glmhdfe_demean_list", (DL_FUNC) &_glmhdfe_demean_list, 1},
     {"_glmhdfe_gradient", (DL_FUNC) &_glmhdfe_gradient, 2},
     {"_glmhdfe_vcov_estimate", (DL_FUNC) &_glmhdfe_vcov_estimate, 3},
     {"_glmhdfe_demean_criterion", (DL_FUNC) &_glmhdfe_demean_criterion, 2},

@@ -24,12 +24,6 @@ demean_variable <- function(variable, fixed_effects, data,
   w <- NULL
   w_sqrt <- NULL
 
-  # weights defaults to 1
-  if (is.null(weights)) {
-    weights <- "w"
-    data[, w := 1]
-  }
-
   # keep only necessary variables
   data <- data[, c(variable, fixed_effects, weights), with = F]
 
@@ -37,22 +31,24 @@ demean_variable <- function(variable, fixed_effects, data,
   data[, (variable) := lapply(mget(variable), as.numeric)]
 
   # pseudo-demean all variables
-  criterion <- demean_criterion(as.matrix(data[, variable, with = F]), data[[weights]])
-  m <- 1
-  repeat {
-    criterion_old <- criterion
-    pretty_message(verbose | trace, str_c("Demeaning transformed variables, iteration: ", m), time = T, linebreak = T)
-
-    for (i in fixed_effects) data[, (variable) := demean_list(mget(variable), get(weights)), by = c(i)]
-
+  if (is.null(weights)) {
+    for (i in fixed_effects) data[, (variable) := demean_list(mget(variable)), by = c(i)]
+  } else {
     criterion <- demean_criterion(as.matrix(data[, variable, with = F]), data[[weights]])
-    criterion_change <- crossprod(criterion - criterion_old) / crossprod(criterion_old)
-    pretty_message(verbose, str_c("change: ", formatC(criterion_change, format = "e", digits = 2)), task = T, linebreak = T)
-    if (m > demean_iterations) break
-    if (criterion_change < demean_tolerance) break
-    m <- m + 1
+    m <- 1
+    repeat {
+      criterion_old <- criterion
+      pretty_message(verbose | trace, str_c("Demeaning transformed variables, iteration: ", m), time = T, linebreak = T)
+      for (i in fixed_effects) data[, (variable) := wdemean_list(mget(variable), get(weights)), by = c(i)]
+      criterion <- demean_criterion(as.matrix(data[, variable, with = F]), data[[weights]])
+      criterion_change <- crossprod(criterion - criterion_old) / crossprod(criterion_old)
+      pretty_message(verbose, str_c("change: ", formatC(criterion_change, format = "e", digits = 2)), task = T, linebreak = T)
+      if (m > demean_iterations) break
+      if (criterion_change < demean_tolerance) break
+      m <- m + 1
+    }
+    for (j in variable) data[, (j) := sqrt(get(weights)) * get(j)]
   }
-  for (j in variable) data[, (j) := sqrt(get(weights)) * get(j)]
 
   # return demeaned variables
   setnames(data, variable, str_c(variable, suffix))

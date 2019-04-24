@@ -45,8 +45,20 @@ demean <- function(var, weight) {
     .Call(`_glmhdfe_demean`, var, weight)
 }
 
-demean_list <- function(var, weight) {
-    .Call(`_glmhdfe_demean_list`, var, weight)
+wdemean <- function(var, weight) {
+    .Call(`_glmhdfe_wdemean`, var, weight)
+}
+
+demean <- function(var) {
+    .Call(`_glmhdfe_demean`, var)
+}
+
+wdemean_list <- function(var, weight) {
+    .Call(`_glmhdfe_wdemean_list`, var, weight)
+}
+
+demean_list <- function(var) {
+    .Call(`_glmhdfe_demean_list`, var)
 }
 
 gradient <- function(X, score) {
