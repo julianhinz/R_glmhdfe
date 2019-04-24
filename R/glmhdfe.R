@@ -79,14 +79,14 @@ glmhdfe <- function(formula,
   if (!family_link %in% family_link_hc) stop(call. = F, "This distribution not yet supported.")
 
   # get lhs, rhs variables and fixed effects
-  all_vars <- (terms(formula, lhs = 0) %>% attr("term.labels"))
-  lhs_var <- formula[[2]] %>% deparse()
-  rhs_var <- terms(formula, lhs = 0, rhs = 1) %>% attr("term.labels")
+  all_vars <- attr(terms(formula, lhs = 0), "term.labels")
+  lhs_var <- deparse(formula[[2]])
+  rhs_var <- attr(terms(formula, lhs = 0, rhs = 1), "term.labels")
   rhs_var_length <- length(rhs_var)
   if (rhs_var_length == 0) rhs_var <- NULL
   if (length(formula)[[2]] == 1) rhs_fe_length <- 0
   if (length(formula)[[2]] > 1) {
-    rhs_fe <- terms(formula, lhs = 0, rhs = 2) %>% attr("term.labels")
+    rhs_fe <- attr(terms(formula, lhs = 0, rhs = 2), "term.labels")
     rhs_fe_length <- length(rhs_fe)
     if (rhs_fe_length > 0) {
       rhs_fe_est <- str_c(rhs_fe, "_est")
@@ -100,7 +100,7 @@ glmhdfe <- function(formula,
   # clustered standard errors
   rhs_cluster_se <- NULL
   if (length(formula)[[2]] == 3 && (attr(formula, "rhs")[[3]] != "0")) {
-    rhs_cluster_se <- terms(formula, lhs = 0, rhs = 3) %>% attr("term.labels")
+    rhs_cluster_se <- attr(terms(formula, lhs = 0, rhs = 3), "term.labels")
   }
 
   # save call in call_object
@@ -386,7 +386,7 @@ glmhdfe <- function(formula,
     if (!is.null(rhs_fe) && include_fe) {
       fe_object <- list()
       for (i in seq(rhs_fe_length)){
-        fe_object[[rhs_fe[i]]] <- data[, list(variable = get(rhs_fe[i]), value = get(rhs_fe_est[i]))] %>% unique()
+        fe_object[[rhs_fe[i]]] <- unique(data[, list(variable = get(rhs_fe[i]), value = get(rhs_fe_est[i]))])
       }
       fe_object <- structure(fe_object, class = "glmhdfe_fe")
     }
