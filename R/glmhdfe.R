@@ -306,7 +306,7 @@ glmhdfe <- function(formula,
         # accelerate
         if (accelerate) {
           if (h > rhs_var_length) accelerate_i <- accelerate_i + 1
-          pretty_message(verbose, str_c("acceleration earliest in ", accelerate_iterations - accelerate_i + 1, " iterations"), task = T, linebreak = T)
+          pretty_message(verbose, str_c("acceleration earliest in ", max(accelerate_iterations - accelerate_i + 1, 1), " iterations"), task = T, linebreak = T)
           if (accelerate_i > accelerate_iterations) {
             if (sum(abs(beta_list[h - 2, ] - beta_list[h - 1, ]) > abs(beta_list[h - 1, ] - beta_list[h, ])) == length(beta[["beta"]])) {
               beta[["beta"]] <- accelerate_beta(beta_list, t(beta[["beta"]]), h, rhs_var)
