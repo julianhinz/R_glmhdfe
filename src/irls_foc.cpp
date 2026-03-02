@@ -19,6 +19,7 @@ Rcpp::List irls_gaussian_identity(arma::mat A, arma::vec b, arma::vec eta, arma:
   arma::vec e(nobs);
   arma::vec r(nobs);
   arma::vec sse(nobs);
+  arma::vec score;
   double dev;
 
   // mu
@@ -30,7 +31,10 @@ Rcpp::List irls_gaussian_identity(arma::mat A, arma::vec b, arma::vec eta, arma:
   //beta
   beta = arma::solve(A.t()*A, A.t()*z);
 
-  // deviance residuals
+  // update mu with new beta
+  mu = offset + A*beta;
+
+  // deviance residuals (with updated mu)
   r = pow(b - mu, 2);
   dev = sum(r);
 
@@ -38,13 +42,18 @@ Rcpp::List irls_gaussian_identity(arma::mat A, arma::vec b, arma::vec eta, arma:
   e = (b - A*beta);
   sse = e.t()*e;
 
+  // score
+  score = A.t()*(b - mu);
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta.t(),
     Rcpp::Named("eta") = A*beta,
-    Rcpp::Named("mu") = offset+eta,
+    Rcpp::Named("mu") = mu,
     Rcpp::Named("nobs") = nobs,
     Rcpp::Named("nvars") = nvars,
-    Rcpp::Named("dev") = dev
+    Rcpp::Named("dev") = dev,
+    Rcpp::Named("sse") = sse,
+    Rcpp::Named("score") = score
   );
 }
 
@@ -70,6 +79,7 @@ Rcpp::List irls_gaussian_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec 
   arma::vec e(nobs);
   arma::vec r(nobs);
   arma::vec sse(nobs);
+  arma::vec score;
   double dev;
 
   // mu
@@ -84,7 +94,10 @@ Rcpp::List irls_gaussian_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec 
   //beta
   beta = arma::solve(A.t()*(W % A.each_col()), A.t()*(W % z));
 
-  // deviance residuals
+  // update mu with new beta
+  mu = exp(offset + A*beta);
+
+  // deviance residuals (with updated mu)
   r = pow(b - mu, 2);
   dev = sum(r);
 
@@ -92,13 +105,18 @@ Rcpp::List irls_gaussian_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec 
   e = (b - A*beta);
   sse = e.t()*e;
 
+  // score
+  score = A.t()*(W % ((b - mu) / mu));
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta.t(),
     Rcpp::Named("eta") = A*beta,
-    Rcpp::Named("mu") = exp(offset+eta),
+    Rcpp::Named("mu") = mu,
     Rcpp::Named("nobs") = nobs,
     Rcpp::Named("nvars") = nvars,
-    Rcpp::Named("dev") = dev
+    Rcpp::Named("dev") = dev,
+    Rcpp::Named("sse") = sse,
+    Rcpp::Named("score") = score
   );
 }
 
@@ -124,6 +142,7 @@ Rcpp::List irls_poisson_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec o
   arma::vec e(nobs);
   arma::vec r(nobs);
   arma::vec sse(nobs);
+  arma::vec score;
   double dev;
 
   // mu
@@ -138,10 +157,13 @@ Rcpp::List irls_poisson_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec o
   //beta
   beta = arma::solve(A.t()*(W % A.each_col()), A.t()*(W % z));
 
-  // deviance
+  // update mu with new beta
+  mu = exp(offset + A*beta);
+
+  // deviance (with updated mu)
   r = 2 * (b % log(b/mu) - (b - mu));
   arma::uvec zeros = find(b == 0); // find zeros
-  arma::uvec not_zeros = find(b != 0); // find zeros
+  arma::uvec not_zeros = find(b != 0); // find non-zeros
   arma::vec replace = 2*mu.elem(zeros); // replace them
   dev = sum(r.elem(not_zeros)) + sum(replace);
 
@@ -149,13 +171,18 @@ Rcpp::List irls_poisson_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec o
   e = (b - A*beta);
   sse = e.t()*e;
 
+  // score
+  score = A.t()*(b - mu);
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta.t(),
     Rcpp::Named("eta") = A*beta,
-    Rcpp::Named("mu") = exp(offset+eta),
+    Rcpp::Named("mu") = mu,
     Rcpp::Named("nobs") = nobs,
     Rcpp::Named("nvars") = nvars,
-    Rcpp::Named("dev") = dev
+    Rcpp::Named("dev") = dev,
+    Rcpp::Named("sse") = sse,
+    Rcpp::Named("score") = score
   );
 }
 
@@ -181,6 +208,7 @@ Rcpp::List irls_gamma_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec off
   arma::vec e(nobs);
   arma::vec r(nobs);
   arma::vec sse(nobs);
+  arma::vec score;
   double dev;
 
   // mu
@@ -192,10 +220,13 @@ Rcpp::List irls_gamma_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec off
   //beta
   beta = arma::solve(A.t()*A, A.t()*z);
 
-  // deviance residuals
+  // update mu with new beta
+  mu = exp(offset + A*beta);
+
+  // deviance residuals (with updated mu)
   r = 2 * ((b - mu) / mu - log(b/mu));
   arma::uvec zeros = find(b == 0); // find zeros
-  arma::uvec not_zeros = find(b != 0); // find zeros
+  arma::uvec not_zeros = find(b != 0); // find non-zeros
   arma::vec replace = 2*mu.elem(zeros); // replace them
   dev = sum(r.elem(not_zeros)) + sum(replace);
 
@@ -203,13 +234,18 @@ Rcpp::List irls_gamma_log(arma::mat A, arma::vec b, arma::vec eta, arma::vec off
   e = (b - A*beta);
   sse = e.t()*e;
 
+  // score
+  score = A.t()*((b - mu) / mu);
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta.t(),
     Rcpp::Named("eta") = A*beta,
-    Rcpp::Named("mu") = exp(offset+eta),
+    Rcpp::Named("mu") = mu,
     Rcpp::Named("nobs") = nobs,
     Rcpp::Named("nvars") = nvars,
-    Rcpp::Named("dev") = dev
+    Rcpp::Named("dev") = dev,
+    Rcpp::Named("sse") = sse,
+    Rcpp::Named("score") = score
   );
 }
 
@@ -234,6 +270,7 @@ Rcpp::List irls_inverse_gaussian_log(arma::mat A, arma::vec b, arma::vec eta, ar
   arma::vec e(nobs);
   arma::vec r(nobs);
   arma::vec sse(nobs);
+  arma::vec score;
   double dev;
 
   // mu
@@ -248,21 +285,29 @@ Rcpp::List irls_inverse_gaussian_log(arma::mat A, arma::vec b, arma::vec eta, ar
   //beta
   beta = arma::solve(A.t()*(W % A.each_col()), A.t()*(W % z));
 
-  // deviance residuals
-  r = pow(b - mu, 2);
+  // update mu with new beta
+  mu = exp(offset + A*beta);
+
+  // deviance residuals: inverse Gaussian deviance = (b - mu)^2 / (b * mu^2)
+  r = pow(b - mu, 2) / (b % pow(mu, 2));
   dev = sum(r);
 
   // sse
   e = (b - A*beta);
   sse = e.t()*e;
 
+  // score
+  score = A.t()*(pow(mu, -1) % ((b - mu) / mu));
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta.t(),
     Rcpp::Named("eta") = A*beta,
-    Rcpp::Named("mu") = exp(offset+eta),
+    Rcpp::Named("mu") = mu,
     Rcpp::Named("nobs") = nobs,
     Rcpp::Named("nvars") = nvars,
-    Rcpp::Named("dev") = dev
+    Rcpp::Named("dev") = dev,
+    Rcpp::Named("sse") = sse,
+    Rcpp::Named("score") = score
   );
 }
 

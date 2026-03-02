@@ -4,8 +4,15 @@
 \alias{pretty_message}
 \title{Pretty messages for the impatient}
 \usage{
-pretty_message(verbose = F, description = NULL, time = F, task = F,
-  linebreak = F, color = black, checkmark = F)
+pretty_message(
+  verbose = FALSE,
+  description = NULL,
+  time = FALSE,
+  task = FALSE,
+  linebreak = FALSE,
+  color = black,
+  checkmark = FALSE
+)
 }
 \arguments{
 \item{verbose}{Be verbose and display messages?}

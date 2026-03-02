@@ -4,9 +4,17 @@
 \alias{compute_vcov}
 \title{Compute variance covariance matrix for standard errors from given glmhdfe_data, glmhdfe_call and glmhdfe_info objects}
 \usage{
-compute_vcov(data, call, info, custom_cluster = NULL,
-  demean_iterations = 100, demean_tolerance = 1e-08,
-  include_data_vcov = F, trace = F, verbose = F)
+compute_vcov(
+  data,
+  call,
+  info,
+  custom_cluster = NULL,
+  demean_iterations = 100,
+  demean_tolerance = 1e-08,
+  include_data_vcov = FALSE,
+  trace = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{glmhdfe_data object}

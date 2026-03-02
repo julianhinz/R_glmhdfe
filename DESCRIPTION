@@ -1,9 +1,11 @@
 Package: glmhdfe
 Title: Estimate Generalized Linear Models with High-Dimensional Fixed Effects
-Version: 0.4.4
+Version: 0.5.0
 Authors@R: c(person("Julian", "Hinz", email = "mail@julianhinz.com", role = c("aut", "cre")),
               person("Joschka", "Wanner", email = "Joschka.Wanner@uni-bayreuth.de", role = c("aut")),
               person("Alexander", "Hudlet", email = "alexander.hudlet@gmail.com", role = c("aut")))
+Author: Julian Hinz [aut, cre], Joschka Wanner [aut], Alexander Hudlet [aut]
+Maintainer: Julian Hinz <mail@julianhinz.com>
 Description: Allows for arbitrary sets of high-dimensional fixed effects in the estimation of
       a generalized linear model by separating the fixed effects from the estimation of the parameters
       of interest.
@@ -11,18 +13,16 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.1.0)
-Suggests: 
-    testthat
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
-LinkingTo: 
+RoxygenNote: 7.3.2
+LinkingTo:
     Rcpp,
     RcppArmadillo
-Imports: 
+Imports:
     Rcpp,
     data.table,
     Formula,
-    crayon,
-    stringr,
-    lfe,
-    purrr
+    crayon

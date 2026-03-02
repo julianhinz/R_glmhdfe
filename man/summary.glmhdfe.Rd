@@ -4,12 +4,13 @@
 \alias{summary.glmhdfe}
 \title{Summarizing models of class \code{glmhdfe}}
 \usage{
-\method{summary}{glmhdfe}(object, se_type = "hessian", ...)
+\method{summary}{glmhdfe}(object, se_type = NULL, ...)
 }
 \arguments{
 \item{object}{Object of class \code{glmhdfe}.}
 
-\item{se_type}{Standard errors. Select from "hessian" (default), "robust", "outer_product_gradient", or "clustered"}
+\item{se_type}{Standard errors. Select from "hessian" (default), "robust", "outer_product_gradient", or "clustered".
+When clusters were specified in the formula, defaults to "clustered".}
 
 \item{...}{further arguments}
 }

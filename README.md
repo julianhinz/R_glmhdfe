@@ -41,7 +41,7 @@ There are numerous options to tweak the estimation procedure:
 
 * `formula` describes dependent variable, right-hand side variables of interest, sets of fixed effects and clustering of standard errors, e.g. as `y ~ x | fe1 + fe2 | cluster1 + cluster2`
 * `data` specifies the `data.table` or `data.frame` with data used in the regression
-* `family` specifies the estimator used, currently limited to `gaussian(link = "identity")`, `gaussian(link = "log")`, `poisson(link = "log")`, `Gamma(link = "log")`
+* `family` specifies the estimator used, currently limited to `gaussian(link = "identity")`, `gaussian(link = "log")`, `poisson(link = "log")`, `Gamma(link = "log")`, and `inverse.gaussian(link = "log")`
 * `beta` allows to include a vector of starting values, although, interestingly, this does not tend to speed up the estimation
 * `tolerance` specifies the minimum change in the deviance at which the iteration breaks
 * `max_iterations` specifies the maximum number of iterations
@@ -70,10 +70,10 @@ You need to specify the data (best in the form of a `glmhdfe_data` object), call
 
 ## Roadmap
 - [x] try `eval` on variables that are not part of data, e.g. for something like `y ~ log(x)`
-- [ ] Inverse Gaussian with log link
-- [ ] tests using `testthat`
+- [x] Inverse Gaussian with log link
+- [x] tests using `testthat`
 - [ ] parallelization in `Rcpp` with `omp`
-- [ ] detect collinearity with `lmhdfe` or other `data.table` routine, not `felm` because this slows it down
+- [x] detect collinearity with QR decomposition instead of `felm`
 - [ ] run first IRLS with transformed lhs, otherwise beta guess only works for gaussian
 - [ ] faster checks for separation issues, implement procedure recommended by Correia et al. (2019)
 <!--* fallback option for generic family-link combinations-->

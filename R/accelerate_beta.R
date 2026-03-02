@@ -6,8 +6,8 @@
 #' @param rhs_var Righthandside variables
 
 accelerate_beta = function(beta_list, beta, h, rhs_var) {
-  step1 = beta_list[(h - length(beta)):(h - 1), ] - beta_list[(h - length(beta) - 1):(h - 2), ] %>% as.matrix()
-  step2 = beta_list[(h - length(beta) + 1):(h), ] - beta_list[(h - length(beta)):(h - 1), ] %>% as.matrix()
+  step1 = as.matrix(beta_list[(h - length(beta)):(h - 1), ] - beta_list[(h - length(beta) - 1):(h - 2), ])
+  step2 = as.matrix(beta_list[(h - length(beta) + 1):(h), ] - beta_list[(h - length(beta)):(h - 1), ])
   lambda = t(step2) %*% solve(t(step1))
   beta_old = beta
   beta = beta + 0.5*solve(diag(nrow = length(beta)) - lambda) %*% step1[1, ]

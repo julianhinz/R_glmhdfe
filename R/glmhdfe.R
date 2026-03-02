@@ -25,9 +25,7 @@
 #'
 #' @import data.table
 #' @import Formula
-#' @import stringr
 #' @import crayon
-#' @importFrom lfe felm
 #' @importFrom stats gaussian coef complete.cases dnorm model.frame model.matrix na.omit pnorm terms
 #'
 #' @export glmhdfe
@@ -39,21 +37,21 @@ glmhdfe <- function(formula,
                     tolerance = 1e-8,
                     max_iterations = 10000,
                     fe_iterations = 5,
-                    accelerate = T,
+                    accelerate = TRUE,
                     accelerate_iterations = 10,
-                    accelerate_aux_vector = T,
-                    compute_vcov = T,
-                    demean_variables = F,
+                    accelerate_aux_vector = TRUE,
+                    compute_vcov = TRUE,
+                    demean_variables = FALSE,
                     demean_iterations = 100,
                     demean_tolerance = tolerance,
-                    include_fe = T,
-                    include_data = F,
-                    include_data_vcov = F,
+                    include_fe = TRUE,
+                    include_data = FALSE,
+                    include_data_vcov = FALSE,
                     skip_checks = NULL,
-                    trace = F,
-                    verbose = F){
+                    trace = FALSE,
+                    verbose = FALSE){
 
-  pretty_message(verbose | trace, "Preparations", time = T, linebreak = T)
+  pretty_message(verbose | trace, "Preparations", time = TRUE, linebreak = TRUE)
 
   # define local variables
   . <- NULL
@@ -69,14 +67,14 @@ glmhdfe <- function(formula,
 
   # sanity checks
   formula <- Formula(formula)
-  if (length(formula)[[1]] == 0) stop(call. = F, "No dependent variable specified")
-  if (length(formula)[[1]] > 1) stop(call. = F, "More than one dependent variable specified")
-  if (nrow(data) == 0 | length(data) == 0) stop(call. = F, "No data specified")
+  if (length(formula)[[1]] == 0) stop(call. = FALSE, "No dependent variable specified")
+  if (length(formula)[[1]] > 1) stop(call. = FALSE, "More than one dependent variable specified")
+  if (nrow(data) == 0 | length(data) == 0) stop(call. = FALSE, "No data specified")
 
   # hard-coded family-link combination
   family_link_hc <- c("gaussian_identity", "gaussian_log", "poisson_log", "Gamma_log", "inverse.gaussian_log")
-  family_link <- str_c(family[["family"]], "_", family[["link"]])
-  if (!family_link %in% family_link_hc) stop(call. = F, "This distribution not yet supported.")
+  family_link <- paste0(family[["family"]], "_", family[["link"]])
+  if (!family_link %in% family_link_hc) stop(call. = FALSE, "This distribution not yet supported.")
 
   # get lhs, rhs variables and fixed effects
   all_vars <- attr(terms(formula, lhs = 0), "term.labels")
@@ -84,18 +82,20 @@ glmhdfe <- function(formula,
   rhs_var <- attr(terms(formula, lhs = 0, rhs = 1), "term.labels")
   rhs_var_length <- length(rhs_var)
   if (rhs_var_length == 0) rhs_var <- NULL
+  rhs_fe <- NULL
+  rhs_fe_est <- NULL
   if (length(formula)[[2]] == 1) rhs_fe_length <- 0
   if (length(formula)[[2]] > 1) {
     rhs_fe <- attr(terms(formula, lhs = 0, rhs = 2), "term.labels")
     rhs_fe_length <- length(rhs_fe)
     if (rhs_fe_length > 0) {
-      rhs_fe_est <- str_c(rhs_fe, "_est")
+      rhs_fe_est <- paste0(rhs_fe, "_est")
     } else {
       rhs_fe <- NULL
       rhs_fe_est <- NULL
     }
   }
-  if (is.null(rhs_var) & is.null(rhs_fe)) stop(call. = F, "No dependent variable specified")
+  if (is.null(rhs_var) & is.null(rhs_fe)) stop(call. = FALSE, "No dependent variable specified")
 
   # clustered standard errors
   rhs_cluster_se <- NULL
@@ -119,62 +119,79 @@ glmhdfe <- function(formula,
   if ("all" %in% skip_checks) skip_checks <- c("separation", "complete_cases", "multicollinearity")
 
   # set up data table with lhs, rhs variables, fixed effects and clusters
-  pretty_message(verbose, "set up model frame", task = T)
+  pretty_message(verbose, "set up model frame", task = TRUE)
   if (!is.data.table(data)) data = as.data.table(data) # not by reference, i.e. setDT, to keep original data untouched
-  if (length(colnames(data)[all_vars %in% colnames(data)]) < length(all_vars)) {
+  vars_needed <- unique(all.vars(formula))
+  missing_vars <- setdiff(vars_needed, colnames(data))
+  if (length(missing_vars) > 0) {
     cat("\n")
-    stop(call. = F, str_c("Variables ", str_c(all_vars[!all_vars %in% colnames(data)], collapse = ", "), " not in data"))
+    stop(call. = FALSE, paste0("Variables ", paste0(missing_vars, collapse = ", "), " not in data"))
   }
   model_frame_cols <- lhs_var
   if (!is.null(rhs_var)) model_frame_cols <- append(model_frame_cols, rhs_var)
   if (!is.null(rhs_fe)) model_frame_cols <- append(model_frame_cols, rhs_fe)
   if (!is.null(rhs_cluster_se)) model_frame_cols <- append(model_frame_cols, rhs_cluster_se)
-  data <- data[, lapply(model_frame_cols, function(x) eval(parse_text(x)))] # allows transformations of the data in the formula
+  data <- data[, lapply(model_frame_cols, function(expr_text) eval(parse_text(expr_text)))] # allows transformations of the data in the formula
   setnames(data, model_frame_cols)
   if (length(rhs_var[rhs_var == "(Intercept)"]) == 1) data[, "(Intercept)" := 1]
   setnames(data, lhs_var, "lhs") # big speed increase because not calling get(lhs_var)
-  pretty_message(verbose, checkmark = T)
+  pretty_message(verbose, checkmark = TRUE)
 
   # only complete cases
-  pretty_message(verbose, "subset to complete cases", task = T)
+  pretty_message(verbose, "subset to complete cases", task = TRUE)
   if(!"complete_cases" %in% skip_checks) data <- data[complete.cases(data)]
-  pretty_message(verbose, checkmark = T)
+  pretty_message(verbose, checkmark = TRUE)
 
   # keep only those linear combinations of groups where there is variation
   nobs_data <- nrow(data)
   if (!"separation" %in% skip_checks & rhs_fe_length > 0) {
-    pretty_message(verbose, "remove combinations of groups without variation", task = T)
-    data[, keep := T]
+    pretty_message(verbose, "remove combinations of groups without variation", task = TRUE)
+    data[, keep := TRUE]
     repeat {
       nobs <- nrow(data)
       # for (i in list_combinations(rhs_fe)) data[, keep := keep & not_min_max(lhs), by = mget(i)]
       for (i in rhs_fe) data[, keep := keep & not_min_max(lhs), by = get(i)]
-      data <- data[keep == T]
+      data <- data[keep == TRUE]
       if (nrow(data) == nobs) break
     }
     data[, keep := NULL]
-    pretty_message(verbose, str_c(": dropped ", nobs_data - nobs, " and kept ", nobs," observations"), linebreak = T)
+    pretty_message(verbose, paste0(": dropped ", nobs_data - nobs, " and kept ", nobs," observations"), linebreak = TRUE)
     if (nobs == 0) {
       cat("\n")
-      stop(call. = F, "All observations dropped.")
+      stop(call. = FALSE, "All observations dropped.")
     }
   } else {
     nobs <- nobs_data
   }
 
-  # detect and remove multicollinear, get starting values for beta
+  # detect and remove multicollinear variables using QR decomposition
   if (!is.null(rhs_var) && !"multicollinearity" %in% skip_checks) {
-    pretty_message(verbose, "remove multicollinear variables", task = T)
+    pretty_message(verbose, "remove multicollinear variables", task = TRUE)
+
+    # Build design matrix, demeaning by FEs if present
     if (!is.null(rhs_fe)) {
-      help_formula <- as.Formula(str_c("lhs ~ ", str_c("`", rhs_var, "`", collapse = " + "), " | ", str_c(rhs_fe, collapse = " + ")))
+      dm_result <- demean_variable(variable = rhs_var,
+                                   fixed_effects = rhs_fe,
+                                   data = data,
+                                   demean_iterations = demean_iterations,
+                                   demean_tolerance = demean_tolerance,
+                                   verbose = FALSE)
+      design_mat <- as.matrix(dm_result)
     } else {
-      help_formula <- as.Formula(str_c("lhs ~ 0 + ", str_c("`", rhs_var, "`", collapse = " + ")))
+      design_mat <- as.matrix(data[, rhs_var, with = FALSE])
     }
-    suppressWarnings(help_reg <- felm(help_formula, data))
-    if ((verbose | trace) &&
-        (sum(is.nan(coef(help_reg))) > 0)) cat(str_c(": ", str_c(names(coef(help_reg))[is.nan(coef(help_reg))], collapse =", "), " dropped"))
-    rhs_var <- rhs_var[!is.nan(coef(help_reg))]
-    pretty_message(verbose, checkmark = T)
+
+    # QR decomposition to detect multicollinearity
+    qr_result <- qr(design_mat)
+    qr_rank <- qr_result$rank
+    if (qr_rank < length(rhs_var)) {
+      keep_cols <- qr_result$pivot[seq_len(qr_rank)]
+      dropped_vars <- rhs_var[-keep_cols]
+      if (verbose | trace) cat(paste0(": ", paste0(dropped_vars, collapse = ", "), " dropped"))
+      rhs_var <- rhs_var[keep_cols]
+      rhs_var_length <- length(rhs_var)
+    }
+    pretty_message(verbose, checkmark = TRUE)
   }
 
   # save data information in info_object
@@ -195,23 +212,23 @@ glmhdfe <- function(formula,
   if (!is.null(rhs_fe)) setkeyv(data, rhs_fe)
 
   # prepare for irls
-  pretty_message(verbose, "prepare for IRLS", task = T)
+  pretty_message(verbose, "prepare for IRLS", task = TRUE)
   if (!is.null(rhs_var)) {
-    vars <- as.matrix(data[, rhs_var, with = F])
+    vars <- as.matrix(data[, rhs_var, with = FALSE])
   } else {
     vars <- as.matrix(rep_len(0, nrow(data)))
   }
-  pretty_message(verbose, checkmark = T)
+  pretty_message(verbose, checkmark = TRUE)
 
   # initialize estimated fixed effects
   if (rhs_fe_length > 0) {
-    pretty_message(verbose, "initialize estimated fixed effects", task = T)
-    data[, str_c(rhs_fe, "_est") := 0.01]
-    pretty_message(verbose, checkmark = T)
+    pretty_message(verbose, "initialize estimated fixed effects", task = TRUE)
+    data[, paste0(rhs_fe, "_est") := 0.01]
+    pretty_message(verbose, checkmark = TRUE)
   }
 
   # initialize offset, eta, beta and deviance
-  pretty_message(verbose, "initialize offset, beta and deviance", task = T)
+  pretty_message(verbose, "initialize offset, beta and deviance", task = TRUE)
   if (is.null(beta)) {
     beta <- t(rep(0.01, rhs_var_length))
   } else {
@@ -231,14 +248,35 @@ glmhdfe <- function(formula,
   }
 
   dev <- sum(family[["dev.resids"]](data[["lhs"]], family[["linkinv"]](data[["offset"]]), 1))
-  pretty_message(verbose, checkmark = T)
+  pretty_message(verbose, checkmark = TRUE)
+
+  # function dispatch tables (avoid repeated string comparisons in loop)
+  fe_foc_fn <- switch(family_link,
+    gaussian_identity = fe_gaussian_identity_foc,
+    gaussian_log = fe_gaussian_log_foc,
+    poisson_log = fe_poisson_log_foc,
+    Gamma_log = fe_gamma_log_foc,
+    inverse.gaussian_log = fe_inverse_gaussian_log_foc
+  )
+  irls_fn <- switch(family_link,
+    gaussian_identity = irls_gaussian_identity,
+    gaussian_log = irls_gaussian_log,
+    poisson_log = irls_poisson_log,
+    Gamma_log = irls_gamma_log,
+    inverse.gaussian_log = irls_inverse_gaussian_log
+  )
 
   # iteration
-  pretty_message(verbose | trace, "Begin iterations", time = T, linebreak = T)
+  pretty_message(verbose | trace, "Begin iterations", time = TRUE, linebreak = TRUE)
   change <- 1
   change_fe <- 1
   accelerate_i <- 0
-  beta_list <- as.matrix(beta)
+
+  # pre-allocate beta_list
+  beta_list <- matrix(NA_real_, nrow = max_iterations + 1, ncol = rhs_var_length)
+  beta_list[1, ] <- beta
+  beta_list_row <- 1
+
   change_list <- as.matrix(t(c(as.integer(Sys.time()),0)))
   h <- 1
 
@@ -247,7 +285,7 @@ glmhdfe <- function(formula,
     # routine for hard-coded family-link combinations with nice fixed effects expression
     repeat {
 
-      pretty_message(verbose | trace, str_c("Iteration ", h), time = T, linebreak = T)
+      pretty_message(verbose | trace, paste0("Iteration ", h), time = TRUE, linebreak = TRUE)
 
       # compare criterion
       dev_old <- dev
@@ -255,7 +293,7 @@ glmhdfe <- function(formula,
       # update fixed effects
       if (!is.null(rhs_fe)) {
 
-        pretty_message(verbose, "update fixed effects", task = T)
+        pretty_message(verbose, "update fixed effects", task = TRUE)
 
         # if beta provided, update fixed effects more than once to "catch up"
         if (h == 1) { #&& sum(beta) > 0){
@@ -269,14 +307,10 @@ glmhdfe <- function(formula,
           # set theta
           data[, theta := eval(parse_text(c("eta", rhs_fe_est[-i])))]
 
-          if (family_link == "gaussian_identity") data[, rhs_fe_est[i] := fe_gaussian_identity_foc(lhs,theta), by = eval(rhs_fe[i])]
-          if (family_link == "gaussian_log") data[, rhs_fe_est[i] := fe_gaussian_log_foc(lhs,theta), by = eval(rhs_fe[i])]
-          if (family_link == "poisson_log") data[, rhs_fe_est[i] := fe_poisson_log_foc(lhs,theta), by = eval(rhs_fe[i])]
-          if (family_link == "Gamma_log") data[, rhs_fe_est[i] := fe_gamma_log_foc(lhs,theta), by = eval(rhs_fe[i])]
-          if (family_link == "inverse.gaussian_log") data[, rhs_fe_est[i] := fe_inverse_gaussian_log_foc(lhs,theta), by = eval(rhs_fe[i])]
+          data[, rhs_fe_est[i] := fe_foc_fn(lhs, theta), by = eval(rhs_fe[i])]
 
         }
-        pretty_message(verbose, checkmark = T)
+        pretty_message(verbose, checkmark = TRUE)
       }
 
       # recompute offset
@@ -285,33 +319,33 @@ glmhdfe <- function(formula,
       # compute new beta
       if (!is.null(rhs_var)) {
 
-        if (!is.null(rhs_fe) & accelerate_aux_vector) vars <- as.matrix(data[, c(rhs_var, rhs_fe_est), with = F])
+        if (!is.null(rhs_fe) & accelerate_aux_vector) vars <- as.matrix(data[, c(rhs_var, rhs_fe_est), with = FALSE])
 
-        if (family_link == "gaussian_identity") beta <- irls_gaussian_identity(A = vars, b = data[["lhs"]], eta = data[["eta"]], offset = data[["offset"]])
-        if (family_link == "gaussian_log") beta <- irls_gaussian_log(A = vars, b = data[["lhs"]], eta = data[["eta"]], offset = data[["offset"]])
-        if (family_link == "poisson_log") beta <- irls_poisson_log(A = vars, b = data[["lhs"]], eta = data[["eta"]], offset = data[["offset"]])
-        if (family_link == "Gamma_log") beta <- irls_gamma_log(A = vars, b = data[["lhs"]], eta = data[["eta"]], offset = data[["offset"]])
-        if (family_link == "inverse.gaussian_log") beta <- irls_inverse_gaussian_log(A = vars, b = data[["lhs"]], eta = data[["eta"]], offset = data[["offset"]])
+        beta <- irls_fn(A = vars, b = data[["lhs"]], eta = data[["eta"]], offset = data[["offset"]])
 
         if (accelerate_aux_vector) beta[["beta"]] <- t(beta[["beta"]][,seq(rhs_var_length)])
+
+        beta_list_row <- beta_list_row + 1
+        beta_list[beta_list_row, ] <- beta[["beta"]]
+
         pretty_message(verbose,
-                       str_c("- updated beta: ", str_c(round(beta[["beta"]], 4), collapse = ", "),
-                             ", change: ", formatC(sqrt(sum((beta_list[h - 1, ] - beta_list[h, ])^2)), format = "e", digits = 2)),
-                       linebreak = T)
+                       paste0("- updated beta: ", paste0(round(beta[["beta"]], 4), collapse = ", "),
+                             ", change: ", formatC(sqrt(sum((beta_list[beta_list_row - 1, ] - beta_list[beta_list_row, ])^2)), format = "e", digits = 2)),
+                       linebreak = TRUE)
 
         data[, eta := beta[["eta"]]]
-        beta_list <- rbind(beta_list, as.matrix(beta[["beta"]]))
         dev <- beta[["dev"]]
 
         # accelerate
         if (accelerate) {
           if (h > rhs_var_length) accelerate_i <- accelerate_i + 1
-          pretty_message(verbose, str_c("acceleration earliest in ", max(accelerate_iterations - accelerate_i + 1, 1), " iterations"), task = T, linebreak = T)
+          pretty_message(verbose, paste0("acceleration earliest in ", max(accelerate_iterations - accelerate_i + 1, 1), " iterations"), task = TRUE, linebreak = TRUE)
           if (accelerate_i > accelerate_iterations) {
-            if (sum(abs(beta_list[h - 2, ] - beta_list[h - 1, ]) > abs(beta_list[h - 1, ] - beta_list[h, ])) == length(beta[["beta"]])) {
-              beta[["beta"]] <- accelerate_beta(beta_list, t(beta[["beta"]]), h, rhs_var)
-              data[, eta := tcrossprod(vars[,seq(rhs_var_length)],t(beta[["beta"]]))]
-              pretty_message(verbose, str_c("accelerated to: ", str_c(round(beta[["beta"]], 4), collapse = ", ")), task = T, linebreak = T)
+            if (sum(abs(beta_list[beta_list_row - 2, ] - beta_list[beta_list_row - 1, ]) > abs(beta_list[beta_list_row - 1, ] - beta_list[beta_list_row, ])) == length(beta[["beta"]])) {
+              beta[["beta"]] <- accelerate_beta(beta_list[seq_len(beta_list_row), , drop = FALSE], t(beta[["beta"]]), beta_list_row, rhs_var)
+              eta_accel <- as.vector(vars[, seq(rhs_var_length), drop = FALSE] %*% as.numeric(beta[["beta"]]))
+              data[, eta := eta_accel]
+              pretty_message(verbose, paste0("accelerated to: ", paste0(round(beta[["beta"]], 4), collapse = ", ")), task = TRUE, linebreak = TRUE)
               accelerate_i <- 0
             }
           }
@@ -325,15 +359,13 @@ glmhdfe <- function(formula,
       change <- (dev_old - dev) / dev
       change_list <- rbind(change_list, as.matrix(t(c(as.integer(Sys.time()), change))))
       if (h < 3) {
-        pretty_message(verbose, str_c("current deviance: ", round(dev, digits = 2),
+        pretty_message(verbose, paste0("current deviance: ", round(dev, digits = 2),
                                       ", change: ", formatC(change, format = "e", digits = 2)),
-                       task = T, linebreak = T)
+                       task = TRUE, linebreak = TRUE)
       } else {
-        pretty_message(verbose, str_c("current deviance: ", round(dev, digits = 2),
-                                      ", change: ", formatC(change, format = "e", digits = 2)#,
-                                      # ", ETA of convergence: ", as.POSIXct(predict_convergence_time(change_list[,1],change_list[,2], tolerance), origin="1970-01-01")
-                                      ),
-                       task = T, linebreak = T)
+        pretty_message(verbose, paste0("current deviance: ", round(dev, digits = 2),
+                                      ", change: ", formatC(change, format = "e", digits = 2)),
+                       task = TRUE, linebreak = TRUE)
       }
 
       if (h == max_iterations) break
@@ -342,11 +374,20 @@ glmhdfe <- function(formula,
       h <- h + 1
     }
 
-    # extract mu
+    # convergence warning
+    if (h == max_iterations) {
+      warning("glmhdfe did not converge after ", max_iterations, " iterations")
+    }
+
+    # trim beta_list to actual size
+    beta_list <- beta_list[seq_len(beta_list_row), , drop = FALSE]
+
+    # recompute mu from final beta and offset
     if (!is.null(rhs_var)) {
-      data[, mu := beta[["mu"]]]
+      eta_final <- as.vector(as.matrix(data[, rhs_var, with = FALSE]) %*% as.numeric(beta[["beta"]]))
+      data[, mu := family[["linkinv"]](eta_final + offset)]
     } else {
-      data[, mu := offset]
+      data[, mu := family[["linkinv"]](offset)]
     }
 
     # demean variables
@@ -357,12 +398,24 @@ glmhdfe <- function(formula,
       if (call_object[["link"]] == "log") data[, score := score / mu]
 
       # weights
+      if (call_object[["family_link"]] == "gaussian_identity") {
+        data[, w := 1]
+        w = "w"
+      }
       if (call_object[["family_link"]] == "gaussian_log") {
         data[, w := mu^2]
         w = "w"
       }
       if (call_object[["family_link"]] == "poisson_log") {
         data[, w := mu]
+        w = "w"
+      }
+      if (call_object[["family_link"]] == "Gamma_log") {
+        data[, w := 1]
+        w = "w"
+      }
+      if (call_object[["family_link"]] == "inverse.gaussian_log") {
+        data[, w := 1/mu]
         w = "w"
       }
 
@@ -400,7 +453,7 @@ glmhdfe <- function(formula,
   } else {
 
     # routine for generic family-link combination with IRLS and lmhdfe
-    stop(call. = F, "Routine for generic family-link combination not yet implemented")
+    stop(call. = FALSE, "Routine for generic family-link combination not yet implemented")
   }
 
   # format coefficients
@@ -423,14 +476,15 @@ glmhdfe <- function(formula,
   object[["response"]] <- data[[lhs_var]] # response vector
   object[["fitted.values"]] <- data[["mu"]] # fitted values
   object[["residuals"]] <- object[["response"]] - object[["fitted.values"]] # residuals
-  if (include_data == T) object[["data"]] <- data # data matrix
-  if (!is.null(rhs_fe) && include_fe == T) object[["fe"]] <- fe_object # estimated fixed effects
-  if (!is.null(rhs_var) && compute_vcov == T) object[["vcov"]] <- vcov_object # variance covariance matrix object, may be robust or clustered
+  if (include_data == TRUE) object[["data"]] <- data # data matrix
+  if (!is.null(rhs_fe) && include_fe == TRUE) object[["fe"]] <- fe_object # estimated fixed effects
+  if (!is.null(rhs_var) && compute_vcov == TRUE) object[["vcov"]] <- vcov_object # variance covariance matrix object, may be robust or clustered
   if (!is.null(rhs_var)) object[["score"]] <- beta[["score"]] # score
   if (!is.null(rhs_var)) object[["sse"]] <- beta[["sse"]] # sum of squared errors
   if (!is.null(rhs_var)) object[["deviance"]] <- beta[["dev"]] # deviance
-  if (verbose == T) object[["beta_list"]] <- beta_list
-  if (verbose == T) object[["change_list"]] <- change_list
+  if (verbose == TRUE) object[["beta_list"]] <- beta_list
+  if (verbose == TRUE) object[["change_list"]] <- change_list
+  object[["family"]] <- family # store family for S3 methods
 
   return(structure(object, class = "glmhdfe"))
 }

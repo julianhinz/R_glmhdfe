@@ -4,8 +4,7 @@
 #' @param s Separator
 #' @param c Collapse
 #'
-#'@import stringr
-parse_text <- function (t, s="", c = "+") parse(text=str_c(t, sep = s, collapse = c))
+parse_text <- function (t, s="", c = "+") parse(text=paste0(t, collapse = c))
 
 #' Check if even number
 #'
@@ -25,11 +24,11 @@ list_combinations = function (elements) {
   return(unlist(
     lapply(
       X = lapply(
-        X = seq(elements), FUN = combn, x = elements, simplify = F),
+        X = seq(elements), FUN = combn, x = elements, simplify = FALSE),
       FUN = as.list
     ),
-    recursive = F,
-    use.names = F)
+    recursive = FALSE,
+    use.names = FALSE)
   )
 }
 
@@ -44,15 +43,14 @@ list_combinations = function (elements) {
 #' @param checkmark Display checkmark at the end of message?
 #'
 #' @import crayon
-#' @importFrom stringr str_c
 #'
-pretty_message <- function(verbose = F, description = NULL, time = F, task = F, linebreak = F, color = black, checkmark = F) {
+pretty_message <- function(verbose = FALSE, description = NULL, time = FALSE, task = FALSE, linebreak = FALSE, color = black, checkmark = FALSE) {
   if (verbose) {
-    if (time) message(color(str_c(Sys.time(), ": ")), appendLF = F)
-    if (task) message(color("- "), appendLF = F)
-    if (!is.null(description)) message(color(description), appendLF = F)
-    if (checkmark) message(green(" \u2713\n"), appendLF = F)
-    if (linebreak) message("\n", appendLF = F)
+    if (time) message(color(paste0(Sys.time(), ": ")), appendLF = FALSE)
+    if (task) message(color("- "), appendLF = FALSE)
+    if (!is.null(description)) message(color(description), appendLF = FALSE)
+    if (checkmark) message(green(" \u2713\n"), appendLF = FALSE)
+    if (linebreak) message("\n", appendLF = FALSE)
   }
 }
 

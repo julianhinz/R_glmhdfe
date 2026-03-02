@@ -2,17 +2,32 @@
 % Please edit documentation in R/glmhdfe-package.R, R/glmhdfe.R
 \docType{package}
 \name{glmhdfe}
-\alias{glmhdfe}
 \alias{glmhdfe-package}
+\alias{glmhdfe}
 \title{glmhdfe}
 \usage{
-glmhdfe(formula, data, family = gaussian(), beta = NULL,
-  tolerance = 1e-08, max_iterations = 10000, fe_iterations = 5,
-  accelerate = T, accelerate_iterations = 10,
-  accelerate_aux_vector = T, compute_vcov = T, demean_variables = F,
-  demean_iterations = 100, demean_tolerance = tolerance,
-  include_fe = T, include_data = F, include_data_vcov = F,
-  skip_checks = NULL, trace = F, verbose = F)
+glmhdfe(
+  formula,
+  data,
+  family = gaussian(),
+  beta = NULL,
+  tolerance = 1e-08,
+  max_iterations = 10000,
+  fe_iterations = 5,
+  accelerate = TRUE,
+  accelerate_iterations = 10,
+  accelerate_aux_vector = TRUE,
+  compute_vcov = TRUE,
+  demean_variables = FALSE,
+  demean_iterations = 100,
+  demean_tolerance = tolerance,
+  include_fe = TRUE,
+  include_data = FALSE,
+  include_data_vcov = FALSE,
+  skip_checks = NULL,
+  trace = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{formula}{Formula that describes lefthandside variable, righthandside variables of interest, sets of fixed effects and error clustering, e.g. \code{y ~ x | fe1 + fe2 | cluster1 + cluster2}}

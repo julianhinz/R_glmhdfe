@@ -4,9 +4,18 @@
 \alias{demean_variable}
 \title{Pseudo-demean variables}
 \usage{
-demean_variable(variable, fixed_effects, data, weights = NULL,
-  demean_iterations = 100, demean_tolerance = 1e-08,
-  parallel_cores = 1, suffix = "_dm", trace = F, verbose = F)
+demean_variable(
+  variable,
+  fixed_effects,
+  data,
+  weights = NULL,
+  demean_iterations = 100,
+  demean_tolerance = 1e-08,
+  parallel_cores = 1,
+  suffix = "_dm",
+  trace = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{variable}{Character vector of variables that should be demeaned}
